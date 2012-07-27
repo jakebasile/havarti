@@ -1,0 +1,3 @@
+recursive-include havarti/templates *
+include *.txt
+include *.md

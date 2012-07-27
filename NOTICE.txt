@@ -1,0 +1,3 @@
+Copyright 2012 Jake Basile (http://www.jakebasile.com/)
+Source @ https://github.com/jakebasile/havarti
+
