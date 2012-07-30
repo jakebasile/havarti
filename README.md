@@ -63,15 +63,14 @@ This will install Havarti, Gunicorn, and Supervisor to run it all. Now, make a `
     command=bin/gunicorn -w 3 --preload -b 0.0.0.0:80 havarti:app
     stdout_logfile=logs/havarti.txt
     stderr_logfile=logs/havarti-err.txt
-    environment=STORAGE=localstorage
-    environment=PACKAGE_CACHE=/var/havarti
+    environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti
     priority=2
 
     [program:celery]
     command=bin/celery --app=havarti worker -l info
     stdout_logfile=logs/celery.txt
     stderr_logfile=logs/celery-err.txt
-    environment=STORAGE=localstorage
+    environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti
     priority=3
 
 This assumes that you have MongoDB installed previously. Then, again from this directory, just create the directories needed and start Supervisor!
