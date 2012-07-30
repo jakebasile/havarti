@@ -64,6 +64,7 @@ This will install Havarti, Gunicorn, and Supervisor to run it all. Now, make a `
     stdout_logfile=logs/havarti.txt
     stderr_logfile=logs/havarti-err.txt
     environment=STORAGE=localstorage
+    environment=PACKAGE_CACHE=/var/havarti
     priority=2
 
     [program:celery]
