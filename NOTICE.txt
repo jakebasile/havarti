@@ -1,3 +1,3 @@
-Copyright 2012 Jake Basile (http://www.jakebasile.com/)
+Copyright 2012 Jake Basile (http://www.jakebasile.com/) and Contributors
 Source @ https://github.com/jakebasile/havarti
-
+Contributors List @ https://github.com/jakebasile/havarti/contributors
