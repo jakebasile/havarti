@@ -32,7 +32,10 @@ def fallback_versions(package):
     base_url = fb_response.url
     soup = bs4.BeautifulSoup(fb_response.text)
     versions = {}
-    version_re = re.compile('^.*%s-(.*)\\.(tar\\.gz|zip)/?$' % package, re.IGNORECASE)
+    version_re = re.compile(
+        '^.*%s-(.*)\\.(tar|tar\\.gz|tgz|tar\\.bz2|zip|pybundle)/?$' % package,
+        re.IGNORECASE
+    )
     for link in soup.find_all('a'):
         href = link.get('href')
         path = urlparse.urlparse(href)[2]
