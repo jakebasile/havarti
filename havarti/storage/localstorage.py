@@ -16,8 +16,10 @@ from flask import abort, send_file
 import os
 import shutil
 
+package_cache = os.environ.get('PACKAGE_CACHE', '~/.havarti-packages/')
+
 def get_package_filename(package, filename):
-    pkgs_dir = os.path.expanduser('~/havarti-packages/')
+    pkgs_dir = os.path.expanduser(package_cache)
     if not os.path.exists(pkgs_dir):
         os.makedirs(pkgs_dir)
     pkg_dir = os.path.join(pkgs_dir, package)
