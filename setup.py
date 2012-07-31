@@ -7,7 +7,7 @@ setup(
     author='Jake Basile',
     author_email='jakebasile@me.com',
     url='https://github.com/jakebasile/havarti',
-    download_url='https://github.com/downloads/jakebasile/havarti/havarti-0.1.tar.gz',
+    download_url='https://github.com/downloads/jakebasile/havarti/havarti-0.2.tar.gz',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
