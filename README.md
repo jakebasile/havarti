@@ -16,7 +16,8 @@ The default way of hosting Havarti is with [Heroku][heroku], [MongoHQ][mongohq],
     $ heroku config:add STORAGE=s3storage \
         AWS_ACCOUNT_KEY_ID=<Your AWS Key ID> \
         AWS_SECRET_KEY_ID=<Your AWS Secret> \
-        MONGO_KEY=MONGOHQ_URL 
+        MONGO_KEY=MONGOHQ_URL \
+        PASSCODE=<Your Super Secret Passcode>
     $ git push heroku master
     $ heroku scale web=1 downloader=1
 
@@ -25,7 +26,8 @@ You can also use [Rackspace Cloud Files][cloudfiles] to store the cache by chang
     $ heroku config:add STORAGE=rackspacestorage \
         RACKSPACE_USERNAME=<Your Rackspace Username> \
         RACKSPACE_KEY=<Your Rackspace API Key> \
-        MONGO_KEY=MONGOHQ_URL
+        MONGO_KEY=MONGOHQ_URL \
+        PASSCODE=<Your Super Secret Passcode>
 
 ### Local
 
@@ -63,14 +65,14 @@ This will install Havarti, Gunicorn, and Supervisor to run it all. Now, make a `
     command=bin/gunicorn -w 3 --preload -b 0.0.0.0:80 havarti:app
     stdout_logfile=logs/havarti.txt
     stderr_logfile=logs/havarti-err.txt
-    environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti
+    environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti,PASSCODE=<Secret Passcode>
     priority=2
 
     [program:celery]
     command=bin/celery --app=havarti worker -l info
     stdout_logfile=logs/celery.txt
     stderr_logfile=logs/celery-err.txt
-    environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti
+    environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti,PASSCODE=<Secret Passcode>
     priority=3
 
 This assumes that you have MongoDB installed previously. Then, again from this directory, just create the directories needed and start Supervisor!
@@ -101,11 +103,20 @@ You can add this to your [pip.conf][] to save some keystrokes.
 
 ### Uploading
 
-You can also upload packages to Havarti directly. These will not be pushed to PyPI, but are available to anyone with the Havarti url. To upload, just use your Havarti Upload URL with setup.py. Your Havarti Upload URL is wherever you hosted Havarti + '/u/', e.g. 'http://random-phrase-5000.herokuapp.com/u/'.
+You can also upload packages to Havarti directly. These will not be pushed to PyPI, but are available to anyone with the Havarti url. To upload, just set up your [.pypirc][pypirc] file with your Havarti upload URL and passcode. Your Havarti Upload URL is wherever you hosted Havarti + '/u/', e.g. 'http://random-phrase-5000.herokuapp.com/u/':
 
-    $ python setup.py sdist upload -r http://random-phrase-5000.herokuapp.com/u/
+    [distutils]
+    index-servers=
+        havarti
 
-You can also set this up in a [.pypirc][pypirc] file to save even more keystrokes.
+    [havarti]
+    repository:http://random-phrase-5000.herokuapp.com/u/
+    username:havarti
+    password:<Your Secret Passcode>
+
+Then, you can upload to Havarti like usual by specifying it on the command line:
+
+    $ python setup.py sdist upload -r havarti
 
 ## Contributing
 

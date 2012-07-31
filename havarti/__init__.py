@@ -21,10 +21,13 @@ from havarti.downloader import download_package
 import os
 import pymongo
 import importlib
+import base64
 
 app = Flask(__name__)
 
 app.config['DEBUG'] = bool(os.environ.get('DEBUG', False))
+
+app.config['PASSCODE'] = os.environ['PASSCODE']
 
 mongo_key = os.environ.get('MONGO_KEY', 'LOCAL_MONGO')
 if mongo_key == 'LOCAL_MONGO':
@@ -84,6 +87,11 @@ def get_file(package, filename):
 
 @app.route('/u/', methods=['POST'])
 def upload():
+    if 'Authorization' not in request.headers:
+        abort(403)
+    auth = base64.b64decode(request.headers['Authorization'].split()[1]).split(':')
+    if auth[0] != 'havarti' or auth[1] != app.config['PASSCODE']:
+        abort(403)
     package = secure_filename(request.form['name'])
     if request.form[':action'] == 'submit':
         mongo.db.packages.update(
