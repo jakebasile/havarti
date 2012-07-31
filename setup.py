@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='havarti',
-    version='0.1',
+    version='0.2',
     description='A quaint cheese shop that plays nicely in The Cloud.',
     author='Jake Basile',
     author_email='jakebasile@me.com',
