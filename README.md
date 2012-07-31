@@ -124,6 +124,10 @@ If you want to contribute to Havarti, just fork and submit a pull request!
 
 ## Changelog
 
+- v0.2
+    - Passcode protected uploads
+    - Now finds more types of source distributions
+    - Added ability to specify local storage location.
 - v0.1 
     - Initial Release
 
