@@ -15,6 +15,7 @@
 from flask import abort, current_app, request 
 from gridfs import GridFS, NoFile
 from werkzeug.wsgi import wrap_file
+from mimetypes import guess_type
 
 cache_for=31536000
 
@@ -24,20 +25,24 @@ def get_package_filename(package, filename):
 def store_package(db, package, filename):
     storage = GridFS(db, 'fs')
     file = open(filename, 'r')
-    storage.put(file.read(), filename=get_package_filename(package, filename) )
+    storage.put(
+        file.read(),
+        filename=get_package_filename(package, filename),
+    )
 
 def retrieve_package(db, package, filename):
     storage = GridFS(db, 'fs')
     try:
         fileobj = storage.get_last_version(filename=get_package_filename(package, filename))
     except NoFile:
-         abort(404)
+        abort(404)
 
     data = wrap_file(request.environ, fileobj, buffer_size=1024 * 256)
     response = current_app.response_class(
         data,
-        mimetype=fileobj.content_type,
-        direct_passthrough=True)
+        mimetype=guess_type(fileobj.filename)[0],
+        direct_passthrough=True
+    )
     response.content_length = fileobj.length
     response.last_modified = fileobj.upload_date
     response.set_etag(fileobj.md5)
