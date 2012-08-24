@@ -2,12 +2,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='havarti',
-    version='0.2.1',
+    version='0.3',
     description='A quaint cheese shop that plays nicely in The Cloud.',
     author='Jake Basile',
     author_email='jakebasile@me.com',
     url='https://github.com/jakebasile/havarti',
-    download_url='https://github.com/downloads/jakebasile/havarti/havarti-0.2.1.tar.gz',
+    download_url='https://github.com/downloads/jakebasile/havarti/havarti-0.3.tar.gz',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[

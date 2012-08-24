@@ -75,7 +75,7 @@ This assumes that you have MongoDB installed previously. Then, again from this d
 
 You can now control the processes through `supervisorctl`. Check out [Supervisor's documentation][superdoc] for more info on it.
 
-### Alternate package cache options
+### Package Cache Options
 
 You can use [Rackspace Cloud Files][cloudfiles] to store the cache by changing the config line to:
 
@@ -85,7 +85,7 @@ You can use [Rackspace Cloud Files][cloudfiles] to store the cache by changing t
         MONGO_KEY=MONGOHQ_URL \
         PASSCODE=<Your Super Secret Passcode>
         
-Alternatively a [GridFS][gridfs] option is avaliable by changing the config line to:
+Alternatively a [GridFS][gridfs] option is available by changing the config line to:
 
     $ heroku config:add STORAGE=mongostorage \
         MONGO_KEY=MONGOHQ_URL \
@@ -93,7 +93,7 @@ Alternatively a [GridFS][gridfs] option is avaliable by changing the config line
         
 For **local use only** a file system based cache is avaliable. It can be used by specifing it in the `supervisord.conf`. Packages will be cached in `~/.havarti-packages/` by default. 
 
-	[program:havarti]
+    [program:havarti]
     command=bin/gunicorn -w 3 --preload -b 0.0.0.0:80 havarti:app
     stdout_logfile=logs/havarti.txt
     stderr_logfile=logs/havarti-err.txt
@@ -164,7 +164,7 @@ If you want to contribute to Havarti, just fork and submit a pull request!
 
 ## Changelog
 
-- v0.2.1
+- v0.3
 	- Added Mongo GridFS storage option
 - v0.2
     - Passcode protected uploads
