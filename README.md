@@ -165,13 +165,15 @@ If you want to contribute to Havarti, just fork and submit a pull request!
 ## Changelog
 
 - v0.3
-	- Added Mongo GridFS storage option
+	- Added Mongo GridFS storage option.
+    - Properly handled unfound packages.
+    - Added a timeout to main index requests.
 - v0.2
-    - Passcode protected uploads
-    - Now finds more types of source distributions
+    - Passcode protected uploads.
+    - Now finds more types of source distributions.
     - Added ability to specify local storage location.
 - v0.1 
-    - Initial Release
+    - Initial Release.
 
 [heroku]: http://www.heroku.com/
 [mongohq]: http://mongohq.com/
