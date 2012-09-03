@@ -25,10 +25,10 @@ fallback_uri = os.environ.get(
 
 def fallback_versions(package):
     base_url = urlparse.urljoin(fallback_uri, package)
-    fb_response = requests.get(base_url)
-    fb_found = fb_response.status_code != 404 and fb_response.text
-    if not fb_found and not cached_package:
-        abort(404)
+    try:
+        fb_response = requests.get(base_url, timeout=5)
+    except:
+        return {}
     base_url = fb_response.url
     soup = bs4.BeautifulSoup(fb_response.text)
     versions = {}
