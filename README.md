@@ -10,12 +10,12 @@ Havarti is a Flask app with a Celery downloader. Anything that can handle that c
 
 The default way of hosting Havarti is with [Heroku][heroku], [MongoHQ][mongohq], and [S3][s3].
 
-    $ git clone git@github.com:jakebasile/Havarti.git && cd havarti
+    $ git clone git@github.com:jakebasile/havarti.git && cd havarti
     $ heroku apps:create --stack cedar
     $ heroku addons:add mongohq:free
     $ heroku config:add STORAGE=s3storage \
-        AWS_ACCOUNT_KEY_ID=<Your AWS Key ID> \
-        AWS_SECRET_KEY_ID=<Your AWS Secret> \
+        AWS_ACCESS_KEY_ID=<Your AWS Access Key> \
+        AWS_SECRET_KEY_ID=<Your AWS Secret Key> \
         MONGO_KEY=MONGOHQ_URL \
         PASSCODE=<Your Super Secret Passcode>
     $ git push heroku master
@@ -91,7 +91,7 @@ Alternatively a [GridFS][gridfs] option is available by changing the config line
         MONGO_KEY=MONGOHQ_URL \
         PASSCODE=<Your Super Secret Passcode>
         
-For **local use only** a file system based cache is avaliable. It can be used by specifing it in the `supervisord.conf`. Packages will be cached in `~/.havarti-packages/` by default. 
+For **local use only** a file system based cache is avaliable. It can be used by specifying it in the `supervisord.conf`. Packages will be cached in `~/.havarti-packages/` by default. 
 
     [program:havarti]
     command=bin/gunicorn -w 3 --preload -b 0.0.0.0:80 havarti:app
@@ -164,6 +164,9 @@ If you want to contribute to Havarti, just fork and submit a pull request!
 
 ## Changelog
 
+- v0.4
+    - Fixed logging into MongoDB with upstream upgrade.
+    - Removed uneeded and updated requirements.
 - v0.3
 	- Added Mongo GridFS storage option.
     - Properly handled unfound packages.
