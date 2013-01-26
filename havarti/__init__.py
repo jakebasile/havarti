@@ -44,7 +44,7 @@ def close_session(excepton=None):
 def robots():
     return 'User-agent: *\nDisallow: /'
 
-@app.route('/i/<package>/')
+@app.route('/<package>/')
 def get_package(package):
     package = secure_filename(package)
     versions = fallback_versions(package)
@@ -70,13 +70,13 @@ def get_package(package):
         package_name=package
     )
 
-@app.route('/i/<package>/<filename>')
+@app.route('/<package>/<filename>')
 def get_file(package, filename):
     filename = secure_filename(filename)
     package = secure_filename(package)
     return storage.retrieve_package(package, filename)
 
-@app.route('/u/', methods=['POST'])
+@app.route('/', methods=['POST'])
 def upload():
     print request.headers
     if 'Authorization' not in request.headers:
