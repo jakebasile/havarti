@@ -2,126 +2,77 @@
 
 Havarti is a quaint cheese shop that plays nicely in **The Cloud**.
 
-## Installation
+## Installation Examples
 
-Havarti is a Flask app with a Celery downloader. Anything that can handle that can run it, but here are some suggestions on how to run it.
+Havarti is a [Flask][] application with a [Celery][] downloader that talks to itself with [Redis][] and uses [SQLAlchemy][] as an ORM. Setting these up is done differently depending on your deployment platform.
 
-### Heroku
+### Heroku Example
 
-The default way of hosting Havarti is with [Heroku][heroku], [MongoHQ][mongohq], and [S3][s3].
+To host on [Heroku][] using [openredis][] and [Heroku Postgres][pg] and [S3][]:
 
     $ git clone git@github.com:jakebasile/havarti.git && cd havarti
-    $ heroku apps:create --stack cedar
-    $ heroku addons:add mongohq:free
-    $ heroku config:add STORAGE=s3storage \
-        AWS_ACCESS_KEY_ID=<Your AWS Access Key> \
-        AWS_SECRET_KEY_ID=<Your AWS Secret Key> \
-        MONGO_KEY=MONGOHQ_URL \
+    $ heroku apps:create
+    $ heroku addons:add heroku-postgresql:dev
+    $ heroku addons:add openredis:micro
+    $ heroku config:add \
+        STORAGE=s3storage \
+        S3_ACCESS_KEY=<Your AWS Access Key> \
+        S3_SECRET_KEY=<Your AWS Secret Key> \
+        S3_BUCKET_NAME=<Name for an S3 Bucket> \
+        REDIS_URI=<Redis URI from OpenRedis> \
+        DB_URI=<Postgres URI from Heroku> \
         PASSCODE=<Your Super Secret Passcode>
     $ git push heroku master
     $ heroku scale web=1 downloader=1
 
-### Local
+### Local Example
 
-Maybe you don't want to be a cool cat and run Havarti on Heroku. You want to run it locally. Here's one way to do it. First, install Havarti somewhere:
+To run locally, make sure you have Postgres and Redis running, then:
 
-    $ virtualenv havarti-install 
-    $ cd havarti-install
-    $ source bin/activate
-    $ pip install havarti gunicorn supervisor
-
-This will install Havarti, Gunicorn, and Supervisor to run it all. Now, make a `supervisord.conf` file in this directory:
-
-    [unix_http_server]
-    file=supervisord.sock
-    chmod=0777
-
-    [rpcinterface:supervisor]
-    supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
-
-    [supervisord]
-    logfile=logs/supervisor.txt
-    loglevel=info
-    pidfile=supervisord.pid
-
-    [supervisorctl]
-    serverurl=unix://supervisord.sock
-
-    [program:mongodb]
-    command=mongod
-    stdout_logfile=logs/mongodb.txt
-    stderr_logfile=logs/mongodb-err.txt
-    priority=1
-
-    [program:havarti]
-    command=bin/gunicorn -w 3 --preload -b 0.0.0.0:80 havarti:app
-    stdout_logfile=logs/havarti.txt
-    stderr_logfile=logs/havarti-err.txt
-    environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti,PASSCODE=<Secret Passcode>
-    priority=2
-
-    [program:celery]
-    command=bin/celery --app=havarti worker -l info
-    stdout_logfile=logs/celery.txt
-    stderr_logfile=logs/celery-err.txt
-    environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti,PASSCODE=<Secret Passcode>
-    priority=3
-
-This assumes that you have MongoDB installed previously. Then, again from this directory, just create the directories needed and start Supervisor!
-
-    $ mkdir logs 
-    $ sudo mkdir -p /data/db
-    $ sudo bin/supervisord
-
-You can now control the processes through `supervisorctl`. Check out [Supervisor's documentation][superdoc] for more info on it.
-
-### Package Cache Options
-
-You can use [Rackspace Cloud Files][cloudfiles] to store the cache by changing the config line to:
-
-    $ heroku config:add STORAGE=rackspacestorage \
-        RACKSPACE_USERNAME=<Your Rackspace Username> \
-        RACKSPACE_KEY=<Your Rackspace API Key> \
-        MONGO_KEY=MONGOHQ_URL \
+    $ pip install havarti
+    $ export \
+        STORAGE=localstorage \
+        REDIS_URI=<Redis URI> \
+        DB_URI=<Postgres URI> \
         PASSCODE=<Your Super Secret Passcode>
-        
-Alternatively a [GridFS][gridfs] option is available by changing the config line to:
+    $ gunicorn -w 3 --preload 0.0.0.0:80 havarti:app & celery --app=havarti worker -l info
 
-    $ heroku config:add STORAGE=mongostorage \
-        MONGO_KEY=MONGOHQ_URL \
-        PASSCODE=<Your Super Secret Passcode>
-        
-For **local use only** a file system based cache is avaliable. It can be used by specifying it in the `supervisord.conf`. Packages will be cached in `~/.havarti-packages/` by default. 
+## Configuration Variables
 
-    [program:havarti]
-    command=bin/gunicorn -w 3 --preload -b 0.0.0.0:80 havarti:app
-    stdout_logfile=logs/havarti.txt
-    stderr_logfile=logs/havarti-err.txt
-    environment=STORAGE=localstorage,PASSCODE=<Secret Passcode>
-    priority=2
+Havarti is controlled through configuration variables set from environment variables.
 
-    [program:celery]
-    command=bin/celery --app=havarti worker -l info
-    stdout_logfile=logs/celery.txt
-    stderr_logfile=logs/celery-err.txt
-    environment=STORAGE=localstorage,PASSCODE=<Secret Passcode>
-    priority=3
-	
-The cache directory can also be specified by adding `PACKAGE_CACHE` to the above example.
+### General Configuration
 
-	[program:havarti]
-	command=bin/gunicorn -w 3 --preload -b 0.0.0.0:80 havarti:app
-	stdout_logfile=logs/havarti.txt
-	stderr_logfile=logs/havarti-err.txt
-	environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti,PASSCODE=<Secret Passcode>
-	priority=2
+You must set the following variables in all cases:
 
-	[program:celery]
-	command=bin/celery --app=havarti worker -l info
-	stdout_logfile=logs/celery.txt
-	stderr_logfile=logs/celery-err.txt
-	environment=STORAGE=localstorage,PACKAGE_CACHE=/var/havarti,PASSCODE=<Secret Passcode>
-	priority=3
+    DEBUG=True|False
+    PORT=<Valid Port>
+    PASSCODE=<Secret Passcode To Block Uploads>
+    STORAGE=s3storage|rackspacestorage|localstorage
+    DB_URI=<Postgres URI>
+    REDIS_URI=<Redis URI>
+
+### S3 Configuration
+
+For `s3storage`, you must set the following:
+
+    S3_SECRET_KEY=<S3 Secret Key>
+    S3_ACCESS_KEY=<S3 Access Key>
+    S3_BUCKET_NAME=<S3 Bucket Name>
+
+### Rackspace Configuration
+
+For `rackspacestorage`, you must set the following:
+
+    RACKSPACE_USERNAME=<Rackspace Username>
+    RACKSPACE_KEY=<Rackspace API Key>
+    RACKSPACE_CONTAINER=<Rackspace Container Name>
+
+### Local Storage Configuration
+
+`localstorage` has the following optional config variable:
+
+    PACKAGE_CACHE=<Rooted Path - Default ~/.havarti-packages>
 
 ## Usage
 
@@ -135,22 +86,22 @@ Havarti checks for new versions with every request, so you are always able to ge
 
 ### Downloading
 
-Just substitute your Havarti Index URL when using Pip. Your Havarti Index URL is wherever you hosted Havarti + '/i/', e.g. 'http://random-phrase-5000.herokuapp.com/i/'.
+Just substitute your Havarti URL when using Pip.
 
-    $ pip install -i http://random-phrase-5000.herokuapp.com/i/ reap
+    $ pip install -i http://random-phrase-5000.herokuapp.com/ reap
 
-You can add this to your [pip.conf][] to save some keystrokes.
+You can add this to your [pip.conf][] to save some keystrokes. If you add the `-i <Havarti_URL>` command to the top of your `requirements.txt` file all packages will route through Havarti when you `pip install -r requirements.txt`.
 
 ### Uploading
 
-You can also upload packages to Havarti directly. These will not be pushed to PyPI, but are available to anyone with the Havarti url. To upload, just set up your [.pypirc][pypirc] file with your Havarti upload URL and passcode. Your Havarti Upload URL is wherever you hosted Havarti + '/u/', e.g. 'http://random-phrase-5000.herokuapp.com/u/':
+You can also upload packages to Havarti directly. These will not be pushed to PyPI, but are available to anyone with the Havarti url. To upload, just set up your [.pypirc][pypirc] file with your Havarti URL and passcode.
 
     [distutils]
     index-servers=
         havarti
 
     [havarti]
-    repository:http://random-phrase-5000.herokuapp.com/u/
+    repository:http://random-phrase-5000.herokuapp.com/
     username:havarti
     password:<Your Secret Passcode>
 
@@ -162,29 +113,16 @@ Then, you can upload to Havarti like usual by specifying it on the command line:
 
 If you want to contribute to Havarti, just fork and submit a pull request!
 
-## Changelog
-
-- v0.4
-    - Fixed logging into MongoDB with upstream upgrade.
-    - Removed uneeded and updated requirements.
-- v0.3
-	- Added Mongo GridFS storage option.
-    - Properly handled unfound packages.
-    - Added a timeout to main index requests.
-- v0.2
-    - Passcode protected uploads.
-    - Now finds more types of source distributions.
-    - Added ability to specify local storage location.
-- v0.1 
-    - Initial Release.
-
+[Flask]: http://flask.pocoo.org/
+[Celery]: http://celeryproject.org/
+[Redis]: http://redis.io/
 [heroku]: http://www.heroku.com/
-[mongohq]: http://mongohq.com/
+[sqlalchemy]: http://sqlalchemy.org/
+[openredis]: https://addons.heroku.com/openredis
+[pg]: http://postgres.heroku.com/
 [s3]: http://aws.amazon.com/s3/
 [pypi]: http://pypi.python.org/pypi
 [pip.conf]: http://www.pip-installer.org/en/latest/configuration.html#config-files
 [cloudfiles]: http://www.rackspace.com/cloud/cloud_hosting_products/files/
-[superdoc]: http://supervisord.org/
 [pypirc]: http://docs.python.org/distutils/packageindex.html#the-pypirc-file
-[gridfs]: http://www.mongodb.org/display/DOCS/GridFS
 
