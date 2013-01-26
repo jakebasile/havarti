@@ -14,32 +14,23 @@
 
 from flask import redirect, abort
 import cloudfiles
-import pymongo
 import os
-from uuid import uuid4
 
-def __get_container__(db):
+def __get_container__():
     username = os.environ['RACKSPACE_USERNAME']
     api_key = os.environ['RACKSPACE_KEY']
     conn = cloudfiles.get_connection(username, api_key)
-    uuid = db.config.find_one({'name': 'uuid'})
-    if not uuid:
-        uuid = str(uuid4())
-        db.config.insert({'name': 'uuid', 'value': uuid})
-    else:
-        uuid = uuid['value']
-    container_name = 'havarti-' + uuid 
-    container = conn.create_container(container_name)
+    container = conn.create_container(os.environ['RACKSPACE_CONTAINER'])
     container.make_public()
     return container
 
-def store_package(db, package, filename):
-    obj = __get_container__(db).create_object(package + '/' + filename)
+def store_package(package, filename):
+    obj = __get_container__().create_object(package + '/' + filename)
     obj.load_from_filename(filename)
 
-def retrieve_package(db, package, filename):
+def retrieve_package(package, filename):
     try:
-        obj = __get_container__(db).get_object(package + '/' + filename)
+        obj = __get_container__().get_object(package + '/' + filename)
         return redirect(obj.public_uri())
     except:
         abort(404)

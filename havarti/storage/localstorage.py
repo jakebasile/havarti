@@ -27,10 +27,11 @@ def get_package_filename(package, filename):
         os.makedirs(pkg_dir)
     return os.path.join(pkg_dir, filename)
 
-def store_package(db, package, filename):
-    shutil.copyfile(filename, get_package_filename(package, filename))
+def store_package(package, filename):
+    stored_filename = get_package_filename(package, filename)
+    shutil.copyfile(filename, stored_filename)
 
-def retrieve_package(db, package, filename):
+def retrieve_package(package, filename):
     pkg_filename = get_package_filename(package, filename)
     if os.path.exists(pkg_filename):
         return send_file(pkg_filename)

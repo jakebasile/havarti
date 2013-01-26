@@ -17,14 +17,11 @@ from __future__ import absolute_import
 from celery import Celery
 import os
 
-mongo_key = os.environ.get('MONGO_KEY', 'LOCAL_MONGO')
-if mongo_key == 'LOCAL_MONGO':
-    mongo_url = 'mongodb://localhost/havarti'
-else:
-    mongo_url = os.environ[mongo_key]
+redis_key = os.environ['REDIS_KEY']
+redis_url = os.environ[redis_key]
 
 celery = Celery(
-    broker=mongo_url,
+    broker=redis_url,
     include=[
         'havarti.downloader',
     ],

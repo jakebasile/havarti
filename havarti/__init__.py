@@ -13,15 +13,16 @@
 # limitations under the License.
 
 from flask import Flask, abort, render_template, redirect, url_for, request
-from flask.ext.pymongo import PyMongo
 from werkzeug import secure_filename
 from datetime import datetime
 from havarti.parse import fallback_versions
 from havarti.downloader import download_package
+from havarti.data import Package, Version, db_session, init_db
+import sqlalchemy.orm
 import os
-import pymongo
 import importlib
 import base64
+import datetime
 
 app = Flask(__name__)
 
@@ -29,26 +30,15 @@ app.config['DEBUG'] = bool(os.environ.get('DEBUG', False))
 
 app.config['PASSCODE'] = os.environ['PASSCODE']
 
-mongo_key = os.environ.get('MONGO_KEY', 'LOCAL_MONGO')
-if mongo_key == 'LOCAL_MONGO':
-    mongo_url = 'mongodb://localhost/havarti'
-else:
-    mongo_url = os.environ[mongo_key]
-mongo_info = pymongo.uri_parser.parse_uri(mongo_url)
-app.config['MONGO_HOST'] = mongo_info['nodelist'][0][0]
-app.config['MONGO_PORT'] = mongo_info['nodelist'][0][1]
-app.config['MONGO_USERNAME'] = mongo_info['username']
-app.config['MONGO_PASSWORD'] = mongo_info['password']
-app.config['MONGO_DBNAME'] = mongo_info['database']
-mongo = PyMongo(app)
-
 storage = importlib.import_module('.storage.' + os.environ['STORAGE'], package='havarti')
 
-def escape_version(version):
-    return version.replace('.', '*')
+@app.before_first_request
+def create_db():
+    init_db()
 
-def unescape_version(version):
-    return version.replace('*', '.')
+@app.teardown_request
+def close_session(excepton=None):
+    db_session.remove()
 
 @app.route('/robots.txt')
 def robots():
@@ -58,19 +48,20 @@ def robots():
 def get_package(package):
     package = secure_filename(package)
     versions = fallback_versions(package)
-    cached_package = mongo.db.packages.find_one({'name': package})
+    cached_package = Package.query.filter_by(name=package).first()
     if cached_package:
         for fb_version in versions:
-            if escape_version(fb_version) not in cached_package['versions']:
+            filtered_version = cached_package.versions.filter_by(version_code=fb_version).first()
+            if filtered_version == None:
                 download_package.delay(package)
                 break
-        for cached_version in cached_package['versions']:
+        for cached_version in cached_package.versions.all():
             version_url = url_for(
                 'get_file',
-                package=package,
-                filename=cached_package['versions'][cached_version]
+                package=cached_package.name,
+                filename=cached_version.filename,
             )
-            versions[unescape_version(cached_version)] = version_url
+            versions[cached_version.version_code] = version_url
     else:
         download_package.delay(package)
     return render_template(
@@ -83,44 +74,51 @@ def get_package(package):
 def get_file(package, filename):
     filename = secure_filename(filename)
     package = secure_filename(package)
-    return storage.retrieve_package(mongo.db, package, filename)
+    return storage.retrieve_package(package, filename)
 
 @app.route('/u/', methods=['POST'])
 def upload():
+    print request.headers
     if 'Authorization' not in request.headers:
         abort(403)
     auth = base64.b64decode(request.headers['Authorization'].split()[1]).split(':')
     if auth[0] != 'havarti' or auth[1] != app.config['PASSCODE']:
         abort(403)
     package = secure_filename(request.form['name'])
+    cached_package = Package.query.filter_by(name=package).first()
     if request.form[':action'] == 'submit':
-        mongo.db.packages.update(
-            {'name': package},
-            {
-            },
-            upsert=True,
-        )
-        return 'OK'
+        if cached_package == None:
+            db_session.add(
+                Package(
+                    name=package,
+                )
+            )
+            db_session.commit()
+            return 'OK'
+        else:
+            abort(400, 'ALREADY EXISTS')
     elif request.form[':action'] == 'file_upload':
-        cached_package = mongo.db.packages.find_one({'name': package})
-        if cached_package and escape_version(request.form['version']) in cached_package['versions']:
-            abort(400)
+        if cached_package == None:
+            cached_package = Package(name=package)
+            db_session.add(cached_package)
+        elif cached_package.version.filter_by(version_code=request.form['version']).first() != None:
+            abort(400, 'ALREADY EXISTS')
         filename = secure_filename(request.files['content'].filename)
         request.files['content'].save(filename)
-        storage.store_package(mongo.db, package, filename)
-        mongo.db.packages.update(
-            {'name': package},
-            {
-                '$set': {
-                    'versions.' + escape_version(request.form['version']): filename,
-                },
-            },
-            upsert=True,
+        storage.store_package(package, filename)
+        db_session.add(
+            Version(
+                version_code=request.form['version'],
+                package=cached_package,
+                filename=filename,
+                date_cached=datetime.datetime.now(),
+            )
         )
+        db_session.commit()
         os.remove(filename)
         return 'OK'
     else:
-        abort(400)
+        abort(400, 'BAD REQUEST')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

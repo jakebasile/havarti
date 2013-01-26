@@ -14,44 +14,38 @@
 
 from havarti.celery import celery
 from havarti.parse import fallback_versions
+from havarti.data import db_session, Package, Version
 import os
 import requests
 import urlparse
-import pymongo
+import datetime
 import importlib
 
 storage = importlib.import_module('havarti.storage.' + os.environ['STORAGE'])
 
-mongo_key = os.environ.get('MONGO_KEY', 'LOCAL_MONGO')
-if mongo_key == 'LOCAL_MONGO':
-    mongo_url = 'mongodb://localhost/havarti'
-else:
-    mongo_url = os.environ[mongo_key]
-mongo_info = pymongo.uri_parser.parse_uri(mongo_url)
-db = pymongo.Connection(mongo_url)[mongo_info['database']]
-
-def escape_version(version):
-    return version.replace('.', '*')
-
 @celery.task
 def download_package(package):
     fb_versions = fallback_versions(package)
-    cached_package = db.packages.find_one({'name': package})
+    cached_package = Package.query.filter_by(name=package).first()
+    if not cached_package:
+        cached_package = Package(name=package)
+        db_session.add(cached_package)
     for version in fb_versions:
-        if not cached_package or escape_version(version) not in cached_package['versions']:
+        filtered_version = cached_package.versions.filter_by(version_code=version).first()
+        if filtered_version == None:
             filename = urlparse.urlparse(fb_versions[version])[2].split('/')[-1]
             fb_file = requests.get(fb_versions[version]).content
             with open(filename, 'w') as tempfile:
                 tempfile.write(fb_file)
-            storage.store_package(db, package, filename)
-            db.packages.update(
-                {'name': package},
-                {
-                    '$set': {
-                        'versions.' + escape_version(version): filename,
-                    },
-                },
-                upsert=True
+            storage.store_package(package, filename)
+            db_session.add(
+                Version(
+                    package=cached_package,
+                    version_code=version,
+                    filename=filename,
+                    date_cached=datetime.datetime.now(),
+                )
             )
             os.remove(filename)
+    db_session.commit()
     

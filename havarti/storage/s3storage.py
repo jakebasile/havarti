@@ -14,27 +14,19 @@
 
 from flask import redirect, abort
 import boto
-import pymongo
-from uuid import uuid4
+import os
 
-def __get_bucket__(db):
-    s3 = boto.connect_s3()
-    uuid = db.config.find_one({'name': 'uuid'})
-    if not uuid:
-        uuid = str(uuid4())
-        db.config.insert({'name': 'uuid', 'value': uuid})
-    else:
-        uuid = uuid['value']
-    bucket_name = 'havarti-' + uuid 
-    bucket = s3.create_bucket(bucket_name)
+def __get_bucket__():
+    s3 = boto.connect_s3(os.environ['S3_ACCESS_KEY'], os.environ['S3_SECRET_KEY'])
+    bucket = s3.create_bucket(os.environ['S3_BUCKET'])
     return bucket
 
-def store_package(db, package, filename):
-    key = __get_bucket__(db).new_key(package + '/' + filename)
+def store_package(package, filename):
+    key = __get_bucket__().new_key(package + '/' + filename)
     key.set_contents_from_filename(filename)
 
-def retrieve_package(db, package, filename):
-    key = __get_bucket__(db).get_key(package + '/' + filename)
+def retrieve_package(package, filename):
+    key = __get_bucket__().get_key(package + '/' + filename)
     if key:
         return redirect(key.generate_url(3600))
     else:
