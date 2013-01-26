@@ -28,5 +28,6 @@ setup(
         'wsgiref==0.1.2',
         'beautifulsoup4==4.1.3',
         'psycopg2==2.4.6',
+        'gunicorn==0.17.2',
     ],
 )
