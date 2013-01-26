@@ -17,8 +17,7 @@ from __future__ import absolute_import
 from celery import Celery
 import os
 
-redis_key = os.environ['REDIS_KEY']
-redis_url = os.environ[redis_key]
+redis_url = os.environ['REDIS_URI']
 
 celery = Celery(
     broker=redis_url,

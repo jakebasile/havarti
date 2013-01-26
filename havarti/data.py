@@ -19,8 +19,7 @@ import os
 
 Base = sqlalchemy.ext.declarative.declarative_base()
 
-db_key = os.environ['DB_KEY']
-db_uri = os.environ[db_key]
+db_uri = os.environ['DB_URI']
 
 db = sqlalchemy.create_engine(db_uri, convert_unicode=True)
 db_session = sqlalchemy.orm.scoped_session(
