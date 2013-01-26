@@ -45,12 +45,16 @@ Havarti is controlled through configuration variables set from environment varia
 
 You must set the following variables in all cases:
 
-    DEBUG=True|False
     PORT=<Valid Port>
     PASSCODE=<Secret Passcode To Block Uploads>
     STORAGE=s3storage|rackspacestorage|localstorage
     DB_URI=<Postgres URI>
     REDIS_URI=<Redis URI>
+
+You may also set these:
+
+    DEBUG=True|False
+    FALLBACK=<Index URL to cache from>
 
 ### S3 Configuration
 
