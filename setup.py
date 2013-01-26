@@ -26,5 +26,8 @@ setup(
         'redis==2.7.2',
         'requests==1.1.0',
         'wsgiref==0.1.2',
+        'beautifulsoup4==4.1.3',
+        'psycopg2==2.4.6',
+        'pysqlite==2.6.3',
     ],
 )
