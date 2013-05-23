@@ -18,7 +18,7 @@ To host on [Heroku][] using [openredis][] and [Heroku Postgres][pg] and [S3][]:
         STORAGE=s3storage \
         S3_ACCESS_KEY=<Your AWS Access Key> \
         S3_SECRET_KEY=<Your AWS Secret Key> \
-        S3_BUCKET_NAME=<Name for an S3 Bucket> \
+        S3_BUCKET=<Name for an S3 Bucket> \
         REDIS_URI=<Redis URI from OpenRedis> \
         DB_URI=<Postgres URI from Heroku> \
         PASSCODE=<Your Super Secret Passcode>
@@ -62,7 +62,7 @@ For `s3storage`, you must set the following:
 
     S3_SECRET_KEY=<S3 Secret Key>
     S3_ACCESS_KEY=<S3 Access Key>
-    S3_BUCKET_NAME=<S3 Bucket Name>
+    S3_BUCKET=<S3 Bucket Name>
 
 ### Rackspace Configuration
 
