@@ -29,7 +29,7 @@ To host on [Heroku][] using [openredis][] and [Heroku Postgres][pg] and [S3][]:
 
 To run locally, make sure you have Postgres and Redis running, then:
 
-    $ pip install havarti
+    $ pip install git+https://github.com/jakebasile/havarti.git 
     $ export \
         STORAGE=localstorage \
         REDIS_URI=<Redis URI> \

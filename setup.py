@@ -19,8 +19,7 @@ setup(
     version='1.0',
     description='A quaint cheese shop that plays nicely in The Cloud.',
     author='Jake Basile',
-    url='http://www.jakebasile.com/projects/havarti/',
-    download_url='http://www.jakebasile.com/downloads/havarti-1.0.tar.gz',
+    url='http://github.com/jakebasile/havarti',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
